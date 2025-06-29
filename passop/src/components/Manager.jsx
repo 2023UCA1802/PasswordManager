@@ -2,14 +2,14 @@ import React, { useEffect, useRef,useState } from "react";
 
 const Manager = () => {
     const ref=useRef();
-    const [form, setForm] = React.useState({site: "", username: "", password: ""});
-    const [passwordArray, setPasswordArray] = React.useState([]);
+    const [form, setForm] = useState({site: "", username: "", password: ""});
+    let [passwordArray, setPasswordArray] = useState([]);
     useEffect(() => {
        let passwords=localStorage.getItem("passwords");
         
-        // if(passwords){
-        //     setPasswordArray = JSON.parse(passwords);
-        // }
+        if(passwords){
+            setPasswordArray = JSON.parse(passwords);
+        }
         
     }, [])
     
@@ -17,11 +17,12 @@ const Manager = () => {
        ( ref.current.src.includes("icons/eye.png") ) ? ref.current.src = "icons/eyecross.png" : ref.current.src = "icons/eye.png";
     }
     const savepassword = () => {
-       
+       setPasswordArray([...passwordArray, form]);
+       localStorage.setItem("passwords", JSON.stringify([...passwordArray, form]))
+       console.log(form);
     }
     const handlechange=(e)=>{
         setForm({...form, [e.target.name]: e.target.value});
-        console.log(form);
     }
     return (
         <>
@@ -53,6 +54,9 @@ const Manager = () => {
                     </lord-icon>
                         Add Password
                     </button>
+                </div>
+                <div className="passwords">
+                    <h2>Your Passwords</h2>
                 </div>
             </div>
         </>
