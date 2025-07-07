@@ -1,29 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ToastContainer, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
+import { useAuth } from "./context/AuthContext";
 
 const Manager = () => {
+    const { email, loading, isLoggedIn } = useAuth();
     const ref = useRef();
     const passwordRef = useRef();
-    const [form, setForm] = useState({ site: "", username: "", password: "" });
+    const [form, setForm] = useState({ site: "", username: "", password: "", user: "" });
     let [passwordArray, setPasswordArray] = useState([]);
     const getPasswords = async () => {
-        let req =await fetch("http://localhost:3000/");
+        let req = await fetch(`http://localhost:3000/?user=${encodeURIComponent(email)}`);
         let passwords = await req.json();
 
         // if (passwords.length != 0) {
         setPasswordArray(passwords);
         // }
     }
+    form.user = email
     useEffect(() => {
+
         getPasswords();
-        // let passwords = localStorage.getItem("passwords");
 
-        // if (passwords.length != 0) {
-        //     setPasswordArray(JSON.parse(passwords));
-        // }
 
-    }, [])
+    }, [email])
     const copyText = (text) => {
         toast('Copied to clipboard', {
             position: "bottom-right",
@@ -53,22 +53,23 @@ const Manager = () => {
             const id = form.id || uuidv4();
             const newPassword = { ...form, id };
             if (form.id) {
-            await fetch("http://localhost:3000/", {
-                method: "DELETE", headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({id:form.id})
-            })
-            setPasswordArray(passwordArray.filter(item => item.id !== form.id));
-        }
+                await fetch("http://localhost:3000/", {
+                    method: "DELETE", headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ id: form.id })
+                })
+                setPasswordArray(passwordArray.filter(item => item.id !== form.id));
+            }
             setPasswordArray([...passwordArray, { ...form, id: uuidv4() }]);
+            setPasswordArray([...passwordArray, newPassword]);
             await fetch("http://localhost:3000/", {
                 method: "POST", headers: {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({ ...form, id: uuidv4() })
             })
-            setPasswordArray([...passwordArray, newPassword]);
+            // setPasswordArray([...passwordArray, newPassword]);
             // localStorage.setItem("passwords", JSON.stringify([...passwordArray, { ...form, id: uuidv4() }]))
             setForm({ site: "", username: "", password: "" });
             toast('Password Saved', {
@@ -82,7 +83,7 @@ const Manager = () => {
                 theme: "dark",
                 // transition :"Bounce",
             });
-            console.log(form);
+         
         }
         else {
             toast('Password Not Saved', {
@@ -102,11 +103,11 @@ const Manager = () => {
         let c = confirm("Are you sure you want to delete this password?");
         if (c) {
             setPasswordArray(passwordArray.filter((item) => item.id !== id));
-            let res =await fetch("http://localhost:3000/", {
+            let res = await fetch("http://localhost:3000/", {
                 method: "DELETE", headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({id})
+                body: JSON.stringify({ id })
             })
             // localStorage.setItem("passwords", JSON.stringify(passwordArray.filter((item) => item.id !== id)))
             toast('Password Deleted', {
@@ -120,11 +121,11 @@ const Manager = () => {
                 theme: "dark",
                 // transition :"Bounce",
             });
-            console.log(form);
+            
         }
     }
     const editpassword = (id) => {
-        setForm({...passwordArray.find((item) => item.id === id),id:id});
+        setForm({ ...passwordArray.find((item) => item.id === id), id: id });
         setPasswordArray(passwordArray.filter((item) => item.id !== id));
 
     }
@@ -146,7 +147,8 @@ const Manager = () => {
                 theme="light"
             // transition="Bounce"
             />
-            <div className="absolute inset-0 -z-10 h-full w-full bg-green-50 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"><div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-green-400 opacity-20 blur-[100px]"></div></div>
+         
+
             <div className="p-2 md:p-5 md:mycontainer">
                 <h1 className="text-4xl font-bold text-center">
                     <span className='text-green-500'> &lt;</span>
@@ -178,7 +180,7 @@ const Manager = () => {
                 <div className="passwords">
                     <h2 className="font-bold text-2xl py-4">Your Passwords</h2>
                     {passwordArray.length == 0 && <div>No passwords to show</div>}
-                    {passwordArray.length != 0 && <table class="table-auto w-full rounded-md overflow-hidden">
+                    {passwordArray.length != 0 && <table className="table-auto w-full rounded-md overflow-hidden">
                         <thead className="bg-green-800 text-white ">
                             <tr>
                                 <th className="py-2">Site</th>
@@ -250,6 +252,7 @@ const Manager = () => {
                     </table>}
                 </div>
             </div>
+
         </>
     );
 };
